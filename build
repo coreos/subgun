@@ -1,0 +1,24 @@
+#!/bin/sh
+
+SG_PACKAGE=github.com/philips/subscribegun
+export GOPATH="${PWD}"
+SRC_DIR="$GOPATH/src"
+SG_DIR="$SRC_DIR/$SG_PACKAGE"
+
+SG_BASE=$(dirname "${SG_DIR}")
+if [ ! -d "${SG_BASE}" ]; then
+	mkdir -p "${SG_BASE}"
+fi
+
+if [ ! -h "${SG_DIR}" ]; then
+	ln -s ../../../ "${SG_DIR}"
+fi
+
+for i in third_party/*; do
+	if [ "$i" = "third_party/src" ]; then
+		continue
+	fi
+	cp -R "$i" src/
+done
+
+go build "${SG_PACKAGE}"
