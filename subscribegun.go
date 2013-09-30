@@ -14,12 +14,16 @@ import (
 )
 
 type config struct {
+	Subscribegun struct {
+		Hostname string
+	}
 	Mailgun struct {
 		Key string
 	}
 }
 
 var mg *mailgun.Client
+var cfg config
 
 type mail struct {
 	from      string
@@ -57,12 +61,58 @@ func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
 }
 
-//
+// subscribeConfirmHandler handles a confirmation link and changes the persons
+// subscription state to "subscribed" if the token matches.
 func subscribeConfirmHandler(w http.ResponseWriter, r *http.Request) {
+	muxVars := mux.Vars(r)
 
+	listName := muxVars["list"]
+	if len(listName) == 0 {
+		http.Error(w, "No list specified!", 404)
+		return
+	}
+
+	email := muxVars["email"]
+	if len(email) == 0 {
+		http.Error(w, "No email address!", 400)
+		return
+	}
+
+	token := muxVars["token"]
+	if len(token) == 0 {
+		http.Error(w, "No subscription token!", 400)
+		return
+	}
+
+	member, err := mg.GetListMember(listName, email)
+	if err != nil {
+		http.Error(w, "Internal error", 500)
+		fmt.Println(err)
+		return
+	}
+
+	// Success! Finish up the subscription.
+	if token != member.Vars["SubscribeToken"] {
+		http.Error(w, "Bad confirmation token", 400)
+		return
+	}
+
+	member.Subscribed = true
+	_, err = mg.UpdateListMember(listName, member)
+	if err != nil {
+		http.Error(w, "Internal error", 500)
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Fprintf(w, "Success! You are now subscribed to %s", listName)
+
+	return
 }
 
-// subscribeHandler send an email and
+// subscribeHandler adds the requested email to the list as unsubscribed and stores
+// a Subscribe token. The token is sent to the email address to ensure the owner
+// actually subscribed.
 func subscribeHandler(w http.ResponseWriter, r *http.Request) {
 	muxVars := mux.Vars(r)
 
@@ -94,7 +144,7 @@ func subscribeHandler(w http.ResponseWriter, r *http.Request) {
 		from:    "no-reply@lists.coreos.com",
 		to:      []string{email},
 		subject: "confirm subscription to " + listName,
-		text: "click here to confirm http://localhost:8080/subscribe/"+listName+"/confirm/"+email+"/"+key,
+		text:    "click here to confirm http://" + cfg.Subscribegun.Hostname + "/subscribe/" + listName + "/confirm/" + email + "/" + key,
 	}
 	_, err = mg.Send(&confirmMail)
 
@@ -112,7 +162,6 @@ func main() {
 		panic(err)
 	}
 
-	cfg := config{}
 	err = json.Unmarshal(configBytes, &cfg)
 	if err != nil {
 		panic(err)
@@ -127,7 +176,7 @@ func main() {
 
 	// subscription handling
 	r.HandleFunc("/subscribe/{list}", subscribeHandler)
-	r.HandleFunc("/subscribe/{list}/confirm/{email}", subscribeConfirmHandler)
+	r.HandleFunc("/subscribe/{list}/confirm/{email}/{token}", subscribeConfirmHandler)
 
 	// TODO: unsubscribe handling
 	// http.HandleFunc("/unsubscribe", handler)

@@ -19,8 +19,10 @@ type ListMember struct {
 }
 
 func (m *ListMember) setURLValues(v *url.Values) {
-	if m.Subscribed == false {
-		v.Set("subscribed", "False")
+	// Translate the subscribed field to a string
+	v.Set("subscribed", "False")
+	if m.Subscribed == true {
+		v.Set("subscribed", "True")
 	}
 	v.Set("address", m.Address)
 	v.Set("name", m.Name)
@@ -48,8 +50,7 @@ func (c *Client) UpdateListMember(list string, m ListMember) (message string, er
 	v := url.Values{}
 	m.setURLValues(&v)
 
-
-	rsp, err := c.api("PUT", "/lists/"+list+"/members"+m.Address, v)
+	rsp, err := c.api("PUT", "/lists/"+list+"/members/"+m.Address, v)
 	if err != nil {
 		return
 	}
@@ -57,5 +58,20 @@ func (c *Client) UpdateListMember(list string, m ListMember) (message string, er
 	response := ListMemberResponse{}
 	err = json.Unmarshal(rsp, &response)
 	message = response.Message
+	return
+}
+
+func (c *Client) GetListMember(list string, email string) (member ListMember, err error) {
+	v := url.Values{}
+
+	rsp, err := c.api("GET", "/lists/"+list+"/members/"+email, v)
+	if err != nil {
+		return
+	}
+
+	response := ListMemberResponse{}
+	err = json.Unmarshal(rsp, &response)
+	member = response.Member
+
 	return
 }
