@@ -2,6 +2,23 @@
 
 Subscribe to a mailgun backed mailing list via a web interface.
 
+## Build and Configuration
+
+Build subscribegun using the build script:
+
+```
+./build
+```
+
+Configure subscribegun by copying config.json.tmpl to config.json and adding in
+your hostname and mailgun API key. Then run subscribegun:
+
+```
+cp config.json.tmpl config.json
+vim config.json
+./subscribegun config.json
+```
+
 ## Subscription Workflow
 
 POST to the subscribe URL. See `subscribe.html` or do it with curl:
