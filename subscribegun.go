@@ -1,20 +1,137 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/philips/go-mailgun"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	listName := r.URL.Path[1:]
+type config struct {
+	Mailgun struct {
+		Key string
+	}
+}
+
+var mg *mailgun.Client
+
+type mail struct {
+	from      string
+	to        []string
+	cc        []string
+	bcc       []string
+	subject   string
+	html      string
+	text      string
+	headers   map[string]string
+	options   map[string]string
+	variables map[string]string
+}
+
+func (m *mail) From() string                 { return m.from }
+func (m *mail) To() []string                 { return m.to }
+func (m *mail) Cc() []string                 { return m.cc }
+func (m *mail) Bcc() []string                { return m.bcc }
+func (m *mail) Subject() string              { return m.subject }
+func (m *mail) Html() string                 { return m.html }
+func (m *mail) Text() string                 { return m.text }
+func (m *mail) Headers() map[string]string   { return m.headers }
+func (m *mail) Options() map[string]string   { return m.options }
+func (m *mail) Variables() map[string]string { return m.variables }
+
+func randomString(l int) string {
+	bytes := make([]byte, l)
+	for i := 0; i < l; i++ {
+		bytes[i] = byte(randInt(65, 90))
+	}
+	return string(bytes)
+}
+
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+//
+func subscribeConfirmHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// subscribeHandler send an email and
+func subscribeHandler(w http.ResponseWriter, r *http.Request) {
+	muxVars := mux.Vars(r)
+
+	listName := muxVars["list"]
 	if len(listName) == 0 {
 		http.Error(w, "No list specified!", 404)
 		return
 	}
-	fmt.Fprintf(w, "Subscribe to: %s", listName)
+
+	email := r.FormValue("email")
+
+	// Generate the tokens for the user
+	vars := map[string]string{
+		"UnsubscribeToken": randomString(16),
+		"SubscribeToken":   randomString(16),
+	}
+	member := mailgun.ListMember{email, false, vars, "", ""}
+
+	key := vars["SubscribeToken"]
+
+	_, err := mg.AddListMember(listName, member)
+	if err != nil {
+		http.Error(w, "Internal error", 500)
+		fmt.Println(err)
+		return
+	}
+
+	confirmMail := mail{
+		from:    "no-reply@lists.coreos.com",
+		to:      []string{email},
+		subject: "confirm subscription to " + listName,
+		text: "click here to confirm http://localhost:8080/subscribe/"+listName+"/confirm/"+email+"/"+key,
+	}
+	_, err = mg.Send(&confirmMail)
+
+	if err != nil {
+		http.Error(w, "Internal error", 500)
+		fmt.Println(err)
+		return
+	}
 }
 
 func main() {
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+	configBytes, err := ioutil.ReadFile(os.Args[1])
+
+	if err != nil {
+		panic(err)
+	}
+
+	cfg := config{}
+	err = json.Unmarshal(configBytes, &cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	mg = mailgun.New(cfg.Mailgun.Key)
+
+	r := mux.NewRouter()
+
+	// TODO: add a secret seed in here
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	// subscription handling
+	r.HandleFunc("/subscribe/{list}", subscribeHandler)
+	r.HandleFunc("/subscribe/{list}/confirm/{email}", subscribeConfirmHandler)
+
+	// TODO: unsubscribe handling
+	// http.HandleFunc("/unsubscribe", handler)
+	// http.HandleFunc("/unsubscribe/confirm", handler)
+
+	http.ListenAndServe(":8080", r)
 }

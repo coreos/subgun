@@ -1,3 +1,5 @@
 packages="
 	github.com/philips/go-mailgun
+	github.com/gorilla/mux
+	github.com/gorilla/context
 "
