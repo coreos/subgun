@@ -1,22 +1,22 @@
-# subscribegun
+# subgun
 
 Subscribe to a mailgun backed mailing list via a web interface.
 
 ## Build and Configuration
 
-Build subscribegun using the build script:
+Build subgun using the build script:
 
 ```
 ./build
 ```
 
-Configure subscribegun by copying config.json.tmpl to config.json and adding in
-your hostname and mailgun API key. Then run subscribegun:
+Configure subgun by copying config.json.tmpl to config.json and adding in
+your hostname and mailgun API key. Then run subgun:
 
 ```
 cp config.json.tmpl config.json
 vim config.json
-./subscribegun config.json
+./subgun config.json
 ```
 
 ## Subscription Workflow

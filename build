@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SG_PACKAGE=github.com/philips/subscribegun
+SG_PACKAGE=github.com/philips/subgun
 export GOPATH="${PWD}"
 SRC_DIR="$GOPATH/src"
 SG_DIR="$SRC_DIR/$SG_PACKAGE"
