@@ -16,6 +16,7 @@ import (
 type config struct {
 	Subscribegun struct {
 		Hostname string
+		Lists    []string
 	}
 	Mailgun struct {
 		Key string
@@ -59,6 +60,17 @@ func randomString(l int) string {
 
 func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
+}
+
+// listAllowed checks to ensure that the list is in the configuration file as
+// a publicly subscribable list.
+func listAllowed(list string) bool {
+	for _, l := range cfg.Subscribegun.Lists {
+		if l == list {
+			return true
+		}
+	}
+	return false
 }
 
 // subscribeConfirmHandler handles a confirmation link and changes the persons
@@ -119,6 +131,12 @@ func subscribeHandler(w http.ResponseWriter, r *http.Request) {
 	listName := muxVars["list"]
 	if len(listName) == 0 {
 		http.Error(w, "No list specified!", 404)
+		return
+	}
+
+	if listAllowed(listName) == false {
+		// TODO: check the right return code for not-allowed
+		http.Error(w, "Unknown list.", 404)
 		return
 	}
 
