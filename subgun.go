@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
-	"os"
-	"time"
 	"net/url"
+	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/philips/go-mailgun"
@@ -107,7 +108,7 @@ func confirmationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	action := muxVars["action"]
-	if token != member.Vars[strings.Title(action) + "Token"] {
+	if token != member.Vars[strings.Title(action)+"Token"] {
 		http.Error(w, "Bad confirmation token", 400)
 		return
 	}
@@ -119,7 +120,7 @@ func confirmationHandler(w http.ResponseWriter, r *http.Request) {
 		member.Subscribed = false
 		fmt.Fprintf(w, "Success! You are now unsubscribed from %s", listName)
 	} else {
-		http.Error(w, fmt.Sprintf("Unknown action %s", action), 500);
+		http.Error(w, fmt.Sprintf("Unknown action %s", action), 500)
 		return
 	}
 
@@ -159,12 +160,15 @@ func initialHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
 
-	action := muxVars["action"];
+	action := muxVars["action"]
 
 	switch action {
-	case "subscribe": handleSubscribe(w, listName, email);
-	case "unsubscribe": handleUnsubscribe(w, listName, email);
-	default: http.Error(w, fmt.Sprintf("Unknown action %s", action), 500);
+	case "subscribe":
+		handleSubscribe(w, listName, email)
+	case "unsubscribe":
+		handleUnsubscribe(w, listName, email)
+	default:
+		http.Error(w, fmt.Sprintf("Unknown action %s", action), 500)
 	}
 }
 
@@ -202,7 +206,6 @@ func handleSubscribe(w http.ResponseWriter, listName string, email string) {
 	} else {
 		key = member.Vars["SubscribeToken"]
 	}
-	
 
 	if err != nil {
 		http.Error(w, "Internal error", 500)
