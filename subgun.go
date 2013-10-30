@@ -218,7 +218,7 @@ func handleSubscribe(w http.ResponseWriter, listName string, email string) {
 		from:    "no-reply@lists.coreos.com",
 		to:      []string{email},
 		subject: "confirm subscription to " + listName,
-		text:    "click here to confirm your subscription request to " + listName + ":\n" + u.String(),
+		text:    "Click below to confirm your subscription request to " + listName + ":\n\n" + u.String(),
 	}
 	_, err = mg.Send(&confirmMail)
 
@@ -244,7 +244,7 @@ func handleUnsubscribe(w http.ResponseWriter, listName string, email string) {
 		from:    "no-reply@lists.coreos.com",
 		to:      []string{email},
 		subject: "confirm unsubscribe to " + listName,
-		text:    "click here to confirm your unsubscribe request to " + listName + ":\n" + u.String(),
+		text:    "Click below to confirm your unsubscribe request to " + listName + ":\n\n" + u.String(),
 	}
 	_, err = mg.Send(&confirmMail)
 
