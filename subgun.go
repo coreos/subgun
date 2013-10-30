@@ -277,5 +277,9 @@ func main() {
 	r.HandleFunc("/{action}/{list}", initialHandler)
 	r.HandleFunc("/{action}/{list}/confirm/{email}/{token}", confirmationHandler)
 
-	http.ListenAndServe(":8080", r)
+	_, port, err := net.SplitHostPort(cfg.Subscribegun.Hostname)
+	if port == "" {
+		port = "8080"
+	}
+	http.ListenAndServe(":"+port, r)
 }
