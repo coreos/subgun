@@ -128,6 +128,14 @@ func subscribeConfirmHandler(w http.ResponseWriter, r *http.Request) {
 func subscribeHandler(w http.ResponseWriter, r *http.Request) {
 	muxVars := mux.Vars(r)
 
+	// Deal with CORS stuff
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Add("Access-Control-Allow-Headers", "Origin")
+	if w.Header().Get("access-control-request-headers") != "" {
+		return
+	}
+
 	listName := muxVars["list"]
 	if len(listName) == 0 {
 		http.Error(w, "No list specified!", 404)
