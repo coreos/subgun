@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/philips/go-mailgun"
@@ -28,6 +28,10 @@ func main() {
 	mg = mailgun.New(cfg.Mailgun.Key)
 	r := app.NewRouter(cfg, mg)
 
-	port := cfg.ListenPort()
-	http.ListenAndServe(":"+port, r)
+	if strings.HasPrefix(cfg.Subscribegun.Listen, "fd://") {
+		app.ServeFD(r)
+	} else {
+		port := cfg.ListenPort()
+		app.ServeTCP(r, port)
+	}
 }
