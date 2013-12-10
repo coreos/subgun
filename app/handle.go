@@ -19,6 +19,7 @@ func NewRouter(cfg *Config, mg *mailgun.Client) *mux.Router {
 
 	r.HandleFunc("/{action}/{list}", hdlr.initialHandler)
 	r.HandleFunc("/{action}/{list}/confirm/{email}/{token}", hdlr.confirmationHandler)
+	r.HandleFunc("/health", hdlr.healthHandler)
 
 	return r
 }
@@ -233,3 +234,6 @@ func (h *Handler) handleUnsubscribe(w http.ResponseWriter, listName string, emai
 	}
 }
 
+func (h *Handler) healthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "OK")
+}
