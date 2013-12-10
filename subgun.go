@@ -19,8 +19,8 @@ import (
 
 type config struct {
 	Subscribegun struct {
-		Hostname string
-		Lists    []string
+		Listen string
+		Lists  []string
 	}
 	Mailgun struct {
 		Key string
@@ -177,7 +177,7 @@ func initialHandler(w http.ResponseWriter, r *http.Request) {
 func confirmURL(action string, listName string, email string, key string) url.URL {
 	u := url.URL{}
 	u.Scheme = "http"
-	u.Host = cfg.Subscribegun.Hostname
+	u.Host = cfg.Subscribegun.Listen
 	u.Path = path.Join("/", action, listName, "confirm", email, key)
 	return u
 }
@@ -277,7 +277,7 @@ func main() {
 	r.HandleFunc("/{action}/{list}", initialHandler)
 	r.HandleFunc("/{action}/{list}/confirm/{email}/{token}", confirmationHandler)
 
-	_, port, err := net.SplitHostPort(cfg.Subscribegun.Hostname)
+	_, port, err := net.SplitHostPort(cfg.Subscribegun.Listen)
 	if port == "" {
 		port = "8080"
 	}
