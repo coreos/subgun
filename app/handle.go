@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/philips/go-mailgun"
@@ -235,5 +236,15 @@ func (h *Handler) handleUnsubscribe(w http.ResponseWriter, listName string, emai
 }
 
 func (h *Handler) healthHandler(w http.ResponseWriter, r *http.Request) {
+	for _, addr := range h.cfg.Subscribegun.Lists {
+		parts := strings.Split(addr, "@")
+		domain := parts[len(parts)-1]
+		_, _, err := h.mg.Stats(domain, 0, 0, []string{}, time.Now())
+		if err != nil {
+			http.Error(w, "FAIL", 500)
+			return
+		}
+	}
+
 	fmt.Fprint(w, "OK")
 }
