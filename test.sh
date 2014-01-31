@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 if [ -z "$PKG" ]; then
-    PKG=""
+    PKG="./app"
 fi
 
 # Get GOPATH, etc from build
