@@ -10,13 +10,18 @@ Build subgun using the build script:
 ./build
 ```
 
-Configure subgun by copying config.json.tmpl to config.json and adding in
-your hostname and mailgun API key. Then run subgun:
+Configure subgun by setting a series of environment variables:
 
 ```
-cp config.json.tmpl config.json
-vim config.json
-./subgun config.json
+export SUBGUN_LISTEN=127.0.0.1:8080
+export SUBGUN_LISTS=<mailgun list 1>,<mailgun list 2>,...
+export SUBGUN_API_KEY=<mailgun api key>
+```
+
+Once configured, you can simply run the binary:
+
+```
+./subgun
 ```
 
 ## Subscription Workflow
