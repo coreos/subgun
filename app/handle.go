@@ -194,8 +194,10 @@ func (h *Handler) handleSubscribe(w http.ResponseWriter, listName string, email 
 	}
 
 	u := h.confirmURL("subscribe", listName, email, key)
+	domain := strings.Split(listName, "@")[1]
+
 	confirmMail := mail{
-		from:    "no-reply@lists.coreos.com",
+		from:    "no-reply@"+domain,
 		to:      []string{email},
 		subject: "confirm subscription to " + listName,
 		text:    "Click below to confirm your subscription request to " + listName + ":\n\n" + u.String(),
@@ -219,9 +221,11 @@ func (h *Handler) handleUnsubscribe(w http.ResponseWriter, listName string, emai
 	}
 	key := member.Vars["UnsubscribeToken"]
 
+	domain := strings.Split(listName, "@")[1]
+
 	u := h.confirmURL("unsubscribe", listName, email, key)
 	confirmMail := mail{
-		from:    "no-reply@lists.coreos.com",
+		from:    "no-reply@"+domain,
 		to:      []string{email},
 		subject: "confirm unsubscribe to " + listName,
 		text:    "Click below to confirm your unsubscribe request to " + listName + ":\n\n" + u.String(),
